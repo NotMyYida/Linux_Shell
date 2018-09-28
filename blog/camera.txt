@@ -1,0 +1,257 @@
+Camera类有一个 Parameters 的内部类，里面包含了Camera的各种参数,driver会根据这些参数的设置来实现这些各种 Camera 的效果。
+也可以通过这些 key 来获取当前的值。	
+	private static final String KEY_PREVIEW_SIZE = "preview-size";				// 预览的大小
+        private static final String KEY_PREVIEW_FORMAT = "preview-format";			// 
+        private static final String KEY_PREVIEW_FRAME_RATE = "preview-frame-rate";		// 预览的帧率
+        private static final String KEY_PREVIEW_FPS_RANGE = "preview-fps-range";		// FPS(frame per second)
+        private static final String KEY_PICTURE_SIZE = "picture-size";				// 拍照图片的大小 (比例要和 preview-size 的一致，不然会出现拉伸，变扁的情况)
+        private static final String KEY_PICTURE_FORMAT = "picture-format";			// 图片的格式
+        private static final String KEY_JPEG_THUMBNAIL_SIZE = "jpeg-thumbnail-size";		// thumbnail的尺寸，拍完照后一般出现在拍照按钮左侧那个缩略图
+        private static final String KEY_JPEG_THUMBNAIL_WIDTH = "jpeg-thumbnail-width";		// thumbnail的宽
+        private static final String KEY_JPEG_THUMBNAIL_HEIGHT = "jpeg-thumbnail-height";	// thumbnail的高
+        private static final String KEY_JPEG_THUMBNAIL_QUALITY = "jpeg-thumbnail-quality";	// thumbnail的质量
+        private static final String KEY_JPEG_QUALITY = "jpeg-quality";				// 图片的质量
+        private static final String KEY_ROTATION = "rotation";					// 照片的旋转角度
+        private static final String KEY_GPS_LATITUDE = "gps-latitude";				// gps 的纬度
+        private static final String KEY_GPS_LONGITUDE = "gps-longitude";			// gps 的经度
+        private static final String KEY_GPS_ALTITUDE = "gps-altitude";				// 海拔高度
+        private static final String KEY_GPS_TIMESTAMP = "gps-timestamp";			// 时间戳
+        private static final String KEY_GPS_PROCESSING_METHOD = "gps-processing-method";	
+        private static final String KEY_WHITE_BALANCE = "whitebalance";				// 白平衡。分为incandescent、fluorescent 、auto 、 Daylight 、Cloudy
+        private static final String KEY_EFFECT = "effect";					// 滤镜效果，比如黑白，旧相片效果等
+        private static final String KEY_ANTIBANDING = "antibanding";				
+        private static final String KEY_SCENE_MODE = "scene-mode";				// 场景。分为 Auto 、Portrait 、Night等等
+        private static final String KEY_FLASH_MODE = "flash-mode";				// 闪光灯模式。分为 on、off、auto
+        private static final String KEY_FOCUS_MODE = "focus-mode";				// 对焦模式。有 auto、macro 、 inifite 、continuous-picture等
+        private static final String KEY_FOCUS_AREAS = "focus-areas";
+        private static final String KEY_MAX_NUM_FOCUS_AREAS = "max-num-focus-areas";
+        private static final String KEY_FOCAL_LENGTH = "focal-length";
+        private static final String KEY_HORIZONTAL_VIEW_ANGLE = "horizontal-view-angle";
+        private static final String KEY_VERTICAL_VIEW_ANGLE = "vertical-view-angle";
+        private static final String KEY_EXPOSURE_COMPENSATION = "exposure-compensation";	// 曝光
+        private static final String KEY_MAX_EXPOSURE_COMPENSATION = "max-exposure-compensation";	// 最大曝光值
+        private static final String KEY_MIN_EXPOSURE_COMPENSATION = "min-exposure-compensation";	// 最小曝光值
+        private static final String KEY_EXPOSURE_COMPENSATION_STEP = "exposure-compensation-step";	// 曝光梯度(假设梯度为3,那每一个等级的曝光+3)
+        private static final String KEY_AUTO_EXPOSURE_LOCK = "auto-exposure-lock";
+        private static final String KEY_AUTO_EXPOSURE_LOCK_SUPPORTED = "auto-exposure-lock-supported";
+        private static final String KEY_AUTO_WHITEBALANCE_LOCK = "auto-whitebalance-lock";
+        private static final String KEY_AUTO_WHITEBALANCE_LOCK_SUPPORTED = "auto-whitebalance-lock-supported";
+        private static final String KEY_METERING_AREAS = "metering-areas";
+        private static final String KEY_MAX_NUM_METERING_AREAS = "max-num-metering-areas";
+        private static final String KEY_ZOOM = "zoom";						// 变焦系数
+        private static final String KEY_MAX_ZOOM = "max-zoom";					// 最大变焦
+        private static final String KEY_ZOOM_RATIOS = "zoom-ratios";				
+        private static final String KEY_ZOOM_SUPPORTED = "zoom-supported";			// 是否支持变焦
+        private static final String KEY_SMOOTH_ZOOM_SUPPORTED = "smooth-zoom-supported";	// 平滑变焦
+        private static final String KEY_FOCUS_DISTANCES = "focus-distances";			// 距离
+        private static final String KEY_VIDEO_SIZE = "video-size";				// 视频的尺寸				
+        private static final String KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO =
+                                            "preferred-preview-size-for-video";
+        private static final String KEY_MAX_NUM_DETECTED_FACES_HW = "max-num-detected-faces-hw";
+        private static final String KEY_MAX_NUM_DETECTED_FACES_SW = "max-num-detected-faces-sw";
+        private static final String KEY_RECORDING_HINT = "recording-hint";
+        private static final String KEY_VIDEO_SNAPSHOT_SUPPORTED = "video-snapshot-supported";	// 录像过程中拍照
+        private static final String KEY_VIDEO_STABILIZATION = "video-stabilization";		// 视频稳定
+        private static final String KEY_VIDEO_STABILIZATION_SUPPORTED = "video-stabilization-supported";	// 是否视频稳定（防抖）
+
+
+        // Formats for setPreviewFormat and setPictureFormat.			数据格式
+        private static final String PIXEL_FORMAT_YUV422SP = "yuv422sp";
+        private static final String PIXEL_FORMAT_YUV420SP = "yuv420sp";
+        private static final String PIXEL_FORMAT_YUV422I = "yuv422i-yuyv";
+        private static final String PIXEL_FORMAT_YUV420P = "yuv420p";
+        private static final String PIXEL_FORMAT_RGB565 = "rgb565";
+        private static final String PIXEL_FORMAT_JPEG = "jpeg";
+        private static final String PIXEL_FORMAT_BAYER_RGGB = "bayer-rggb";
+
+
+	
+	接口 CameraModule： Camera的模式，包含 VideoModule（录像）、PhotoModule（照片）、WideAnglePanoramaModule（全景）等，需要实现的方法有 init()、 onPauseBeforeSuper()、 onPauseAfterSuper()、 onResumeBeforeSuper()、
+onResumeAfterSuper()等。UI视图交互，初始化参数等都是由接口完成。
+	init()用于初始化。一些 UI 的初始化，SharedPreference 的更新（ 换为对应的 CameraId的SharedPreference ）,打开 Camera，实例化camera对象，打开预览。
+	onResumeBeforeSuper():在onResume()的 super.onResume()之前调用。把 mPause 设为了 false。
+	onResumeAfterSuper()：在onResume()的 super.onResume()之后调用。将一些 UI 由隐藏状态改变为可视状态，开启一个ResumeTask，如果camera没有被打开，就打开camera，开预览，开启传感器的监听。
+	onPauseBeforeSuper()：在onPause()的 super.onPause()之前调用。把 mPause 设为 true。隐藏一些 UI（比如 SurfaceView），取消传感器监听。
+	onPauseAfterSuper(): 在onPause()的 super.onPause()之后调用。释放camera，关闭MediaService，关闭位置监听。
+	
+	CameraActivity是实现主要功能的Activity,模式的切换在CameraActivity中完成，切换模式的时候先关闭当前的模式，再开启新的模式。即先调用closeModule()，再调用openModule()。在这个过程中，程序做了什么事情可以从上述的描写中知晓。
+
+    private void openModule(CameraModule module) {
+
+        module.onResumeBeforeSuper();
+        module.onResumeAfterSuper();
+    }
+
+    private void closeModule(CameraModule module) {
+        module.onPauseBeforeSuper();
+        module.onPauseAfterSuper();
+    }
+
+
+
+
+
+	参数的设置：mParameters.set(KEY_NAME, keyValue);
+		  mCameraDevice.setParameters(mParameters);
+	通过这两行代码就能将参数设置到Camera中，mParameters为 Camera.Parameters 对象，KEY_NAME 就是Camera参数的键值，keyValue 就是参数值，mCameraDevice 是 Camera 对象。SnapdragonCamera通过SharedPreference将参数值存储起来，由于参数比较多，SnapdragonCamera使用xml文件保存了这些参数，各个模块有各自的参数，res/xml路径下有camera_preference.xml，capture_preference.xml,video_preference.xml,由PreferenceInflater类來解析这些xml文件。而SharePreference的KEY值在CameraSettings类被保存为一个个的变量。比如：
+    public static final String KEY_LOCAL_VERSION = "pref_local_version_key";
+    public static final String KEY_RECORD_LOCATION = "pref_camera_recordlocation_key";
+    public static final String KEY_VIDEO_QUALITY = "pref_video_quality_key";
+    public static final String KEY_VIDEO_TIME_LAPSE_FRAME_INTERVAL = "pref_video_time_lapse_frame_interval_key";
+    public static final String KEY_PICTURE_SIZE = "pref_camera_picturesize_key";
+    public static final String KEY_JPEG_QUALITY = "pref_camera_jpegquality_key";
+    public static final String KEY_FOCUS_MODE = "pref_camera_focusmode_key";
+    public static final String KEY_FLASH_MODE = "pref_camera_flashmode_key";
+
+
+	PhotoModule程序运行流程：init()初始化各种View控件，如果 mOpenCameraThread 为空，则实例化 OpenCameraThread，OpenCameraThread是开启照相机Camera对象的线程。如下所示：
+	private class OpenCameraThread extends Thread {
+	        @Override
+	        public void run() {
+	            openCamera();
+	            startPreview();
+	        }
+	}
+openCamera()方法实例化了 Camera 对象，startPreview（）方法将 SurfaceView 与 Camera 对象绑定起来，以开启预览。预览开启后，camera会初始化参数，setCameraParameters(UPDATE_PARAM_ALL)，UPDATE_PARAM_ALL为更新所有的参数。setCameraParameters（）方法如下所示：
+	private void setCameraParameters(int updateSet) {
+	        if (mCameraDevice == null) {
+	            return;
+	        }
+	        synchronized (mCameraDevice) {
+	            boolean doModeSwitch = false;
+	
+	            if ((updateSet & UPDATE_PARAM_INITIALIZE) != 0) {
+	                updateCameraParametersInitialize();
+	            }
+	
+	            if ((updateSet & UPDATE_PARAM_ZOOM) != 0) {
+	                updateCameraParametersZoom();
+	            }
+	
+	            if ((updateSet & UPDATE_PARAM_PREFERENCE) != 0) {
+	                doModeSwitch = updateCameraParametersPreference();
+	            }
+	
+	            mCameraDevice.setParameters(mParameters);
+	
+	            // Switch to gcam module if HDR+ was selected
+	            if (doModeSwitch && !mIsImageCaptureIntent) {
+	                mHandler.sendEmptyMessage(SWITCH_TO_GCAM_MODULE);
+	            }
+	        }
+	    }
+因为 UPDATE_PARAM_ALL = -1, (updateSet & UPDATE_PARAM_INITIALIZE) != 0 、(updateSet & UPDATE_PARAM_ZOOM) != 0 和 (updateSet & UPDATE_PARAM_PREFERENCE) != 0，所以 updateCameraParametersInitialize()（设置PreviewFpsRange、RECORDING_HINT《false》、video-stabilization-supported《false》）、updateCameraParametersZoom()(设置zoom系数)和updateCameraParametersPreference()都会被执行。
+和updateCameraParametersPreference()设置的参数比较多：
+	setAutoExposureLockIfSupported();
+        setAutoWhiteBalanceLockIfSupported();
+        setFocusAreasIfSupported();
+        setMeteringAreasIfSupported();	
+pictureSize、previewSize、JpegThumbnailSize、SceneMode、JpegQuality、ExposureCompensation、FlashMode、WhiteBalance，
+if (mContinuousFocusSupported && ApiHelper.HAS_AUTO_FOCUS_MOVE_CALLBACK) {
+            updateAutoFocusMoveCallback();
+}如果对焦是 Continuous-picture 则添加场景移动时，自动对焦的回调。
+除此以外，还有“tsmakeup”，“tsmakeup_whiten”，“tsmakeup_clean”，最后调用qcomUpdateCameraParametersPreference()。
+设置 luma-adaptation（亮度） ，long-shot（长按拍照按钮连拍），touchAfAec ，picture-format，
+
+
+	拍照：以PhotoModule为例，点击拍照按钮，会调用到 onShutterButtonClick（），如果符合拍照的条件（足够内存，camera处于空闲状态等），就会调用capture()方法。最终会调用
+	mCameraDevice.takePicture(mHandler,
+                        new ShutterCallback(!animateBefore),
+                        mRawPictureCallback, mPostViewPictureCallback,
+                        new JpegPictureCallback(loc));
+	在 onPictureTaken(byte [] jpegData, CameraProxy camera)中，jpegData就是返回的byte[]数据， 保存照片 mActivity.getMediaSaveService().addImage(jpegData, title, date, mLocation, width, height,orientation, exif, mOnMediaSavedListener,mContentResolver, mPictureFormat);保存照片由 MediaService 类完成，MediaService是一个Service，有多个内部类，比如 ImageSaveTask，是一个 AsyncTask,byte[]解码和IO操作都在doInbackground（）方法里面，以及刷新图库也在这里面。
+
+
+
+	对焦：FocusOverlayManager管理所有的对焦活动，在openCamera（）方法中被实例化，需要Camera的Parameters参数。onSingeTapUp（）可以触发手动点击预览对焦。onAutoFocus(boolean focused, boolean shutterButtonPressed)返回对焦的状态，以更新对焦状态的UI，如果对焦状态为 （mState == STATE_FOCUSING_SNAP_ON_FINISH），则执行拍照动作。cancelAutoFocus（）取消对焦，使对焦状态变为空闲状态。对焦状态和拍照的关系很紧密，只有对焦状态正确了，才能进行拍照，如果是正在对焦的状态，点击了拍照按钮，是不会马上拍照的，可能给用户造成按钮不响应的感觉，所以拍完一张照片后，要调用cancelAutoFocus（）方法取消对焦。
+对焦的模式:CONTINOUS_PICTURE（连续拍照 continuous-picture）、AUTO（自动对焦 auto）、INFINITY(无穷远 infinity)、MACRO（微距 macro）。可以把 continuous-picture理解为程序在检测到场景变化时自动autoFocus(来自 fulinwsuafcie 的CSDN 博客 ，全文地址请点击：https://blog.csdn.net/fulinwsuafcie/article/details/49558001)
+
+
+	录像：核心类VideoModule，init()方法中初始化布局，打开Camera，随后执行readVideoPreferences（）方法，设置参数。Video的视频质量的参数,通过一个键值对的方式来获取，VIDEO_QUALITY_TABLE，键值对如下：
+	VIDEO_QUALITY_TABLE.put("1920x1080", CamcorderProfile.QUALITY_1080P);
+        VIDEO_QUALITY_TABLE.put("1280x720",  CamcorderProfile.QUALITY_720P);
+        VIDEO_QUALITY_TABLE.put("720x480",   CamcorderProfile.QUALITY_480P);
+输入尺寸，得到视频质量的参数，是一个int类型的值 quality，最后获得一个CamcorderProfile类。
+mProfile = CamcorderProfile.get(mCameraId, quality)。除此之外，高帧率之类的相关参数也会被设置进去。随后设定 previewSize，getDesiredPreviewSize()。接着设置编码解码相关的参数，与视频质量参数一样，编码也是通过键值对的方式来设置的，视频编码如下：
+	VIDEO_ENCODER_TABLE.put("h263", MediaRecorder.VideoEncoder.H263);
+        VIDEO_ENCODER_TABLE.put("h264", MediaRecorder.VideoEncoder.H264);
+        int h265 = ApiHelper.getIntFieldIfExists(MediaRecorder.VideoEncoder.class,
+                       "HEVC", null, MediaRecorder.VideoEncoder.DEFAULT);
+        if (h265 == MediaRecorder.VideoEncoder.DEFAULT) {
+            h265 = ApiHelper.getIntFieldIfExists(MediaRecorder.VideoEncoder.class,
+                       "H265", null, MediaRecorder.VideoEncoder.DEFAULT);
+        }
+        VIDEO_ENCODER_TABLE.put("h265", h265);
+        VIDEO_ENCODER_TABLE.put("m4v", MediaRecorder.VideoEncoder.MPEG_4_SP);
+        VIDEO_ENCODER_TABLE.putDefault(MediaRecorder.VideoEncoder.DEFAULT);
+默认为“h264”。还有音频编码：
+	AUDIO_ENCODER_TABLE.put("amrwb", MediaRecorder.AudioEncoder.AMR_WB);
+        AUDIO_ENCODER_TABLE.put("aac", MediaRecorder.AudioEncoder.AAC);
+        AUDIO_ENCODER_TABLE.putDefault(MediaRecorder.AudioEncoder.DEFAULT);
+默认为“aac”。
+设置视频拍摄时长。
+初始化录像过程拍摄 initializeVideoSnapshot（）,由底层决定是否支持录像过程中拍照。参数为"video-snapshot-supported"。
+onResumeAfterSuper()方法，如果还没有进行预览 if(!mPreviewing)，则调用 openCamera（）,readVideoPreferences(),resizeForPreviewAspectRatio()，startPreview()，其他情况则调用 mUI.enableShutter(true)，使拍照按钮可用。
+
+
+	录像过程：startVideoRecording（）方法包含了录像的过程。录像的开始，改变UI，判断当前的参数是否可以录像，比如内存、存储空间是否充足，是否支持在高帧率拍摄，是否支持HSR等。然后初始化Recorder,调用initializeRecorder（）,判断当前的配置是否支持分辨率，如果是 mIsVideoCaptureIntent（不保存，只作为数据发送到某个应用），则设置大小的限制 requestedSizeLimit ，10s钟的限制。接着实例化一个MediaRecorder,MediaRecorder的配置：
+	mMediaRecorder.setCamera(mCameraDevice.getCamera());	// 设置 Camera
+	mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+	mProfile.videoCodec = mVideoEncoder;
+        mProfile.audioCodec = mAudioEncoder;
+        mProfile.duration = mMaxVideoDurationInMs;
+
+        if ((mProfile.audioCodec == MediaRecorder.AudioEncoder.AMR_NB) &&
+            !mCaptureTimeLapse && !isHFR) {
+            mProfile.fileFormat = MediaRecorder.OutputFormat.THREE_GPP;
+        }
+        // Set params individually for HFR case, as we do not want to encode audio
+        if ((isHFR || isHSR) && captureRate > 0) {
+            if (isHSR) {
+                LogUtil.e(TAG, "Enabling audio for HSR");
+                mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            }
+            mMediaRecorder.setOutputFormat(mProfile.fileFormat);
+            mMediaRecorder.setVideoFrameRate(mProfile.videoFrameRate);
+            mMediaRecorder.setVideoEncodingBitRate(mProfile.videoBitRate);
+            mMediaRecorder.setVideoEncoder(mProfile.videoCodec);
+            if (isHSR) {
+                LogUtil.e(TAG, "Configuring audio for HSR");
+                mMediaRecorder.setAudioEncodingBitRate(mProfile.audioBitRate);
+                mMediaRecorder.setAudioChannels(mProfile.audioChannels);
+                mMediaRecorder.setAudioSamplingRate(mProfile.audioSampleRate);
+                mMediaRecorder.setAudioEncoder(mProfile.audioCodec);
+            }
+        } else {
+            if (!mCaptureTimeLapse) {
+                mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            }
+
+            mMediaRecorder.setProfile(mProfile);
+        }
+
+        mMediaRecorder.setVideoSize(mProfile.videoFrameWidth, mProfile.videoFrameHeight);//设置录像尺寸
+        mMediaRecorder.setMaxDuration(mMaxVideoDurationInMs);//设置录像时长
+
+	mMediaRecorder.start();// 开始录像
+
+
+
+	全景模式（WideAnglePanoramaModule）：init()方法，初始化UI，设置方向变化监听。mUI.setCaptureProgressOnDirectionChangeListener（）;初始化Runnable mOnFrameAvailableRunnable,这个Runnable在主线程运行，用于更新每一帧的画面。实例化MosaicFrameProcessor，MosaicFrameProcessor.getInstance()。实例化一个Handler，在 handleMessage（）方法中，有处理低质量资源、生成全景图错误、MSG_END_DIALOG_RESET_TO_PREVIEW、MSG_CLEAR_SCREEN_DELAY、MSG_RESET_TO_PREVIEW、MSG_RESET_TO_PREVIEW。
+onResumeAfterSuper（）方法中，开始初始化全景拍照，setupCamera（）初始化成功则返回true，流程如下：首先openCamera（），优先选择后置摄像头，如果打开失败则初始化失败。设置拍照的参数setupCaptureParams（），先设置预览尺寸，parameters.setPreviewSize(mCameraPreviewWidth, mCameraPreviewHeight)，设置尺寸的方式为findBestPreviewSize（）,设置帧率，设置对焦模式。configureCamera（）将参数设置入mCamereDevice中。初始化完全景的配置后，初始化MosaicFrameProcessor,initMosaicFrameProcessorIfNeeded()，mMosaicFrameProcessor.initialize(720, 480, getPreviewBufSize())这条代码用于设置全景拍照过程中预览图的大小。
+configMosaicPreview(),这个方法做的一件重要的事情是初始化一个 MosaicPreviewRenderer ,enableWarpedPanoPreview如果为true，则会显示全景拍摄过程中已经拍好的预览图。
+		MosaicPreviewRenderer renderer = new MosaicPreviewRenderer(
+                mUI.getSurfaceTexture(), mPreviewUIWidth, mPreviewUIHeight,
+                isLandscape, mDeviceOrientation, enableWarpedPanoPreview);
+最后会调用 resetToPreviewIfPossible()，startCameraPreview（）。
+
+	全景模式拍摄：onShutterButtonClick()，根据当前的状态来决定动作，当状态为 CAPTURE_STATE_VIEWFINDER，就是当前处于预览状态，则开始执行拍摄操作 startCapture（）。当状态为 CAPTURE_STATE_MOSAIC ，就是处于拍摄状态，则停止拍摄 stopCapture(false),开始保存图片。
+startCapture（）：转态会改为 mCaptureState = CAPTURE_STATE_MOSAIC，然后有一个拍摄过程的监听方法，mMosaicFrameProcessor.setProgressListener（）。
+stopCapture(false)：状态改为 mCaptureState = CAPTURE_STATE_VIEWFINDE，停止预览，runBackgroundThread（）在后台程序运行保存图片的代码，generateFinalMosaic（boolean : highres）, 图片数据 byte[] imageData = mMosaicFrameProcessor.getFinalMosaicNV21();数据格式为YuvImage。当保存好了低质量的全景图后，发送一个 MSG_LOW_RES_FINAL_MOSAIC_READY 的 Message，接收到这个Message的开始保存高质量的全景图generateFinalMosaic（true）。
+
+
+	SnapdragonCamera 初始化流程：
+	第一次启动：	setModuleFromIndex（index） --> 
+
+
+
